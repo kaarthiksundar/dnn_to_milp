@@ -1,8 +1,5 @@
-#packages
+
 using JuMP
-# using CPLEX
-#defining the solver
-# milp_optimizer = CPLEX.Optimizer
 
 """
 Layer 1 is the input layer and layer n is the output layer.
