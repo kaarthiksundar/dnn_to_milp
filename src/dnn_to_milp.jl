@@ -108,7 +108,7 @@ function get_milp(
         m,
         layer_connections_last,
         sum(
-            w[num_layers-1][(1, j)] * x[num_layers-1, j]
+            w[num_layers-1][(j, 1)] * x[num_layers-1, j]
             for j = 1:num_nodes_in_layer[num_layers-1]
         ) + b[num_layers][1] == x[num_layers, 1]
     )
