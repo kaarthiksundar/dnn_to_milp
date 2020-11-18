@@ -80,8 +80,18 @@ function get_milp(
     @variable(m, s[l in 2:(num_layers-1), n in 1:num_nodes_in_layer[l]] >= 0)
     @variable(m, z[l in 2:(num_layers-1), n in 1:num_nodes_in_layer[l]], Bin)
 
-    # if input is specified add this constraint with input_array specified 
-    # @constraint(m, input_layer[n in 1:n_L[1]], x[1,n] == input_array[n])
+    # input variables 
+    input = @variable(m, [1:num_nodes_in_layer[1]], base_name = "input")
+
+    # output variables 
+    output = @variable(m, base_name = "ouptut")
+
+    # input constraint 
+    @constraint(m, input_c[n in 1:num_nodes_in_layer[1]], x[1, n] == input[n])
+
+    # output constraint 
+    @constraint(m, output_bias, output == x[num_layers, 1] + b[num_layers][1])
+
 
     # linking constraints 
     @constraint(
@@ -99,7 +109,7 @@ function get_milp(
     @constraint(
         m,
         layer_connections[l in 2:(num_layers-1), n in 1:num_nodes_in_layer[l]],
-        sum(w[l-1][(n, j)] * x[l-1, j] for j = 1:num_nodes_in_layer[l-1]) + b[l][n] ==
+        sum(w[l-1][EdgeId(j, n)] * x[l-1, j] for j = 1:num_nodes_in_layer[l-1]) + b[l][n] ==
         x[l, n] - s[l, n]
     )
 
@@ -108,8 +118,11 @@ function get_milp(
         m,
         layer_connections_last,
         sum(
-            w[num_layers-1][(j, 1)] * x[num_layers-1, j]
+            w[num_layers-1][EdgeId(j, 1)] * x[num_layers-1, j]
             for j = 1:num_nodes_in_layer[num_layers-1]
         ) + b[num_layers][1] == x[num_layers, 1]
     )
+
+    return m, input, output
+
 end
