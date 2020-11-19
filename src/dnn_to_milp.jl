@@ -1,5 +1,6 @@
 
 using JuMP
+using CPLEX 
 
 """
 Layer 1 is the input layer and layer n is the output layer.
@@ -63,35 +64,47 @@ function get_milp(
     num_layers::Int,
     num_nodes_in_layer::Vector{Int},
     w::Dict,
-    b::Dict;
+    b::Dict, 
+    input_range, 
+    output_range;
     m = JuMP.Model(),
 )
     Mp = 1e6
     Mn = 1e6
 
+    var = Dict()
     @assert num_nodes_in_layer[end] == 1
     # one variable for each node in the DNN 
-    @variable(m, x[l in 1:num_layers, n in 1:num_nodes_in_layer[l]])
+    var[:x] = @variable(m, [l in 1:num_layers, n in 1:num_nodes_in_layer[l]])
+    x = var[:x]
 
     # lower bounds on each x variable for all the intermediate nodes 
     @constraint(m, x_lb[l in 2:(num_layers-1), n in 1:num_nodes_in_layer[l]], x[l, n] >= 0)
 
     # two variables  for each intermediate node in DNN
-    @variable(m, s[l in 2:(num_layers-1), n in 1:num_nodes_in_layer[l]] >= 0)
-    @variable(m, z[l in 2:(num_layers-1), n in 1:num_nodes_in_layer[l]], Bin)
+    var[:s] = @variable(m, [l in 2:(num_layers-1), n in 1:num_nodes_in_layer[l]], lower_bound=0)
+    var[:z] = @variable(m, [l in 2:(num_layers-1), n in 1:num_nodes_in_layer[l]], Bin)
+
+    s = var[:s]
+    z = var[:z]
 
     # input variables 
-    input = @variable(m, [1:num_nodes_in_layer[1]], base_name = "input")
+    var[:input] = @variable(m, [1:num_nodes_in_layer[1]], base_name = "input")
+    input = var[:input]
 
     # output variables 
-    output = @variable(m, base_name = "ouptut")
+    var[:output] = @variable(m, base_name = "ouptut")
+    output = var[:output]
 
     # input constraint 
-    @constraint(m, input_c[n in 1:num_nodes_in_layer[1]], x[1, n] == input[n])
+    @constraint(m, input_c[n in 1:num_nodes_in_layer[1]], x[1, n] == 2 * 
+        (input[n] - input_range[n][1]) / (input_range[n][2] - input_range[n][1]) - 1
+    )
 
     # output constraint 
-    @constraint(m, output_bias, output == x[num_layers, 1] + b[num_layers][1])
-
+    @constraint(m, output_denormalization, output == 0.5 * 
+        (x[num_layers, 1] + 1) * (output_range[2] - output_range[1]) + output_range[1]
+    )
 
     # linking constraints 
     @constraint(
@@ -123,6 +136,15 @@ function get_milp(
         ) + b[num_layers][1] == x[num_layers, 1]
     )
 
-    return m, input, output
-
+    return m, var
 end
+
+function set_input(m, input, data)
+    @constraint(m, [i = 1:length(data)], data[i] == input[i])
+    return
+end 
+
+function solve_model(m)
+    set_optimizer(m, CPLEX.Optimizer)
+    optimize!(m)
+end 
