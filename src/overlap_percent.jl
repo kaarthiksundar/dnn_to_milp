@@ -1,13 +1,3 @@
-using DelimitedFiles 
-
-include("dnn_to_milp.jl")
-
-node_file = "../data/Bias_1.csv"
-edge_file = "../data/Node_1.csv"
-range_file = "../data/Ranges_1.csv"
-num_layers = 4
-num_nodes_in_layer = [6, 20, 20, 1]
-
 function read_and_populate_model(node_file, edge_file, range_file, 
     num_layers, num_nodes_in_layer; has_final_output_bias = true)
     
@@ -54,21 +44,39 @@ function read_and_populate_model(node_file, edge_file, range_file,
     
 end 
 
-m, var = read_and_populate_model(node_file, edge_file, range_file, num_layers, num_nodes_in_layer)
+function get_overlap_percentage(args::Dict)::Float64 
+    node_file = args["node_file"]
+    edge_file = args["edge_file"]
+    range_file = args["range_file"]
+    num_layers = args["num_layers"]
+    num_nodes_in_layer = args["num_nodes_in_layer"]
+    case_file = args["casefile"]
+    pmax_value = args["pmax"]
 
-input = var[:input]
-output = var[:output]
-x = var[:x]
+    m, var = read_and_populate_model(node_file, 
+        edge_file, range_file, 
+        num_layers, 
+        num_nodes_in_layer)
 
-data = [3.0, 0.3, 50.0, 0.1, 0.5330, 500.0]
+    input = var[:input]
+    output = var[:output]
 
-set_input(m, input, data)
+    case_data = readdlm(case_file)
 
-solve_model(m)
+    @constraint(m, input[1] == case_data[1])
+    @constraint(m, input[2] == case_data[2])
+    @constraint(m, input[3] == case_data[3])
+    @constraint(m, input[4] == case_data[4])
+    @constraint(m, input[6] == case_data[5])
 
-println("output value: $(JuMP.value(output))")
+    JuMP.set_lower_bound(input[5], 0.05)
+    JuMP.set_upper_bound(input[5], 0.75)
+    JuMP.set_upper_bound(output, 0.2)
 
-# original output: 0.0998
+    @objective(m, Min, (output - pmax_value) * (output - pmax_value))
 
+    solve_model(m)
 
+    return JuMP.value(input[5])
 
+end 
