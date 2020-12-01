@@ -250,6 +250,7 @@ function get_optimal_placements(td::TunnelData,
     for i in 1:(td.num_segments-1)
         lw_wp = td.lw_wp[i+1]
         rw_wp = td.rw_wp[i+1]
+        (op.num_sensors_in_segment[i] == 0) && (continue)
         prev_sensor_distance, prev_sensor_id = compute_last_sensor(td, op, i)
         distance_to_turn = td.c_distances[i] - prev_sensor_distance
         (prev_sensor_id * 2 == op.num_sensors) && (break)

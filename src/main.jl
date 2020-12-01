@@ -1,14 +1,7 @@
 using DelimitedFiles 
 using ArgParse
 
-include("dnn_to_milp.jl")
-include("overlap_percent.jl")
-include("types.jl")
-include("data_parsing.jl")
-include("sensor_placement.jl")
-include("writer.jl")
-
-function ArgParse.parse_item(::Vector{Int}, x::AbstractString)
+function ArgParse.parse_item(::Array{Int64, 1}, x::AbstractString)
     a = split(x, ('[', ']', ',', ' '))
     b = []
     for i in a 
@@ -17,6 +10,13 @@ function ArgParse.parse_item(::Vector{Int}, x::AbstractString)
     end 
     return b 
 end
+
+include("dnn_to_milp.jl")
+include("overlap_percent.jl")
+include("types.jl")
+include("data_parsing.jl")
+include("sensor_placement.jl")
+include("writer.jl")
 
 s = ArgParseSettings()
 @add_arg_table s begin
@@ -35,7 +35,7 @@ s = ArgParseSettings()
     "--pmax"
         help = "required pmax (default = 0.1)"
         arg_type = Float64 
-        default = 0.1
+        default = 0.2
     "--num_layers"
         help = "number of layers including input and output layers in DNN"
         arg_type = Int 
