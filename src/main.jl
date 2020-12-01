@@ -2,7 +2,7 @@ using DelimitedFiles
 using ArgParse
 
 function ArgParse.parse_item(::Array{Int64, 1}, x::AbstractString)
-    a = split(x, ('[', ']', ',', ' '))
+    a = split(x, ('[', ']', ' ', ','))
     b = []
     for i in a 
         (i == "") && (continue) 
@@ -35,14 +35,14 @@ s = ArgParseSettings()
     "--pmax"
         help = "required pmax (default = 0.1)"
         arg_type = Float64 
-        default = 0.2
+        default = 0.1
     "--num_layers"
         help = "number of layers including input and output layers in DNN"
         arg_type = Int 
         default = 4
     "--num_nodes_in_layer"
         help = "number of nodes in each layer" 
-        arg_type = Vector{Int}
+        arg_type = Array{Int64, 1}
         default = [6, 20, 20, 1]
     "--casefile" 
         help = "case file for tunnel orientation"
