@@ -47,19 +47,19 @@ s = ArgParseSettings()
     "--casefile" 
         help = "case file for tunnel orientation"
         arg_type = String 
-        default = "./data/testcases/TestCase_7.csv"
+        default = "./data/testcases/TestCase_10.csv"
     "--wallcasefile"
         help = "data for walls"
         arg_type = String 
-        default = "./data/retestcases/WallWPs_7.csv"
+        default = "./data/retestcases/WallWPs_10.csv"
     "--output_straight"
         help = "output filename for straight placement"
         arg_type = String 
-        default = "./output/straight_7.csv"
+        default = "./output/straight_10.csv"
     "--output_optimal"
         help = "output filename for optimal placement"
         arg_type = String 
-        default = "./output/optimal_7.csv"
+        default = "./output/optimal_10.csv"
 end
 
 parsed_args = parse_args(ARGS, s)
