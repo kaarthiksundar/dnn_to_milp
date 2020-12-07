@@ -71,7 +71,7 @@ function get_overlap_percentage(args::Dict)::Float64
 
     JuMP.set_lower_bound(input[5], 0.05)
     JuMP.set_upper_bound(input[5], 0.75)
-    JuMP.set_upper_bound(output, 0.2)
+    JuMP.set_upper_bound(output, 4.5)
 
     @objective(m, Min, (output - pmax_value) * (output - pmax_value))
 
